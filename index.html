@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Jahon Urushi</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0c1016; color: #eef1f5;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; }
+  canvas#map { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; }
+  .panel { background: rgba(10, 14, 20, .88); border: 1px solid rgba(255, 255, 255, .08); border-radius: 10px; }
+  #top { position: fixed; left: 10px; right: 10px; top: 10px; display: flex; align-items: center; gap: 14px;
+    padding: 8px 14px; font-size: 14px; font-weight: 600; z-index: 5; }
+  #top .date { font-size: 17px; font-weight: 800; min-width: 150px; }
+  #top .speeds { display: flex; gap: 4px; }
+  #top .speeds button { width: 30px; height: 28px; padding: 0; font-size: 13px; }
+  #top .speeds button.on { background: #3b82f6; }
+  #top .res { display: flex; gap: 14px; margin-left: auto; font-size: 13px; }
+  #top .res b { font-size: 15px; }
+  #top .flag { width: 14px; height: 14px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+  #side { position: fixed; right: 10px; top: 64px; bottom: 10px; width: 340px; z-index: 5; display: flex; flex-direction: column; overflow: hidden; }
+  #tabs { display: flex; gap: 6px; padding: 8px 8px 0; }
+  #tabs button { flex: 1; font-size: 13px; padding: 7px 4px; background: #1b2430; }
+  #tabs button.on { background: #3b82f6; }
+  #tabBody { flex: 1; overflow-y: auto; padding: 10px 12px 14px; font-size: 13px; }
+  #tabBody h3 { margin: 0 0 8px; font-size: 15px; }
+  #tabBody .row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+  #tabBody .row:last-child { border: 0; }
+  #tabBody .muted { opacity: .65; font-size: 12px; }
+  #tabBody .bar { height: 7px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; margin: 3px 0 8px; }
+  #tabBody .bar i { display: block; height: 100%; }
+  .actbtn { width: 100%; margin-top: 8px; font-size: 13px; padding: 9px; }
+  .actbtn.danger { background: #8a2f2f; } .actbtn.danger:hover { background: #ac3a3a; }
+  .actbtn.ok { background: #2f6f3f; } .actbtn.ok:hover { background: #3a8a4d; }
+  .nation-row { display: flex; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .nation-row .flag { width: 16px; height: 16px; border-radius: 3px; flex: none; }
+  .nation-row .name { flex: 1; }
+  .nation-row .tag { font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+  .tag.war { background: #8a2f2f; } .tag.ally { background: #2f6f3f; } .tag.peace { background: #3a3f4a; } .tag.pact { background: #6a5a2a; } .tag.dead { background: #222; opacity: .6; }
+  .nation-row button { font-size: 11px; padding: 4px 8px; }
+  #log { position: fixed; left: 10px; bottom: 10px; width: 420px; max-height: 190px; overflow-y: auto; padding: 8px 12px; font-size: 12.5px; z-index: 5; }
+  #log div { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  #log div:last-child { border: 0; }
+  #log b { font-weight: 700; }
+  #selInfo { position: fixed; left: 10px; top: 64px; width: 300px; z-index: 5; padding: 10px 14px; display: none; }
+  #selInfo h3 { margin: 0 0 6px; font-size: 15px; }
+  #selInfo .flag { width: 13px; height: 13px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+  kbd { background: #fff; color: #000; border-radius: 4px; padding: 0 6px; font: 700 12px system-ui; }
+  button { font: 700 14px system-ui; padding: 9px 16px; border-radius: 7px; border: 0; cursor: pointer; background: #27303d; color: #fff; }
+  button:hover { background: #333f4f; }
+  button:disabled { opacity: .4; cursor: default; }
+  button.main { background: #3b82f6; font-size: 17px; padding: 12px 30px; }
+  button.main:hover { background: #5a9bff; }
+  #overlay { position: fixed; inset: 0; z-index: 20; display: flex; background: rgba(5, 8, 12, .86); padding: 16px; overflow: auto; }
+  #overlay .box { max-width: 760px; width: 100%; margin: auto; text-align: center; }
+  #overlay h1 { font-size: 42px; margin: 0 0 6px; }
+  #overlay p { opacity: .82; line-height: 1.5; margin: 8px 0; }
+  #pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+  #pick button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; background: #1b2430; }
+  #pick button i { width: 30px; height: 20px; border-radius: 3px; }
+  #pick button.sel { outline: 2px solid #ffc83c; }
+  .btns { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .note { font-size: 13px; opacity: .6; }
+  @media (max-width: 760px) {
+    #side { width: 290px; }
+    #log { width: 300px; }
+    #selInfo { width: 250px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="map"></canvas>
+
+<div id="top" class="panel">
+  <span class="date" id="dateLbl">1 sentabr, 1939</span>
+  <div class="speeds">
+    <button id="spPause" class="on">II</button>
+    <button id="sp1">1x</button>
+    <button id="sp2">3x</button>
+    <button id="sp3">6x</button>
+  </div>
+  <div class="res" id="topRes"></div>
+</div>
+
+<div id="selInfo" class="panel"></div>
+
+<div id="side" class="panel">
+  <div id="tabs">
+    <button data-tab="hud" class="on">Hudud</button>
+    <button data-tab="nations">Davlatlar</button>
+  </div>
+  <div id="tabBody"></div>
+</div>
+
+<div id="log" class="panel"></div>
+
+<div id="overlay"><div class="box" id="obox"></div></div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const DEBUG = /[?&]debug/.test(location.search);
+const rand = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+// ================================================================== Xarita
+// Katak kodlari: '.' dengiz, '#' tog' (o'tib bo'lmaydi), boshqasi davlat kodi
+const COLS = 30, ROWS = 18;
+const SEA = 'sea', MTN = 'mtn', NEUTRAL = 'neutral';
+
+const COUNTRIES = {
+  ger: { name: 'Germaniya', color: '#6b6f52', faction: 'axis', manpower: 900, industry: 12, stability: 75,
+    capital: [16, 6], frontCells: [[20, 5], [20, 6], [20, 7], [20, 8], [13, 6], [13, 7], [13, 8], [13, 9]],
+    startGarrison: { capital: 220, front: 300 } },
+  ita: { name: 'Italiya', color: '#3f8f4f', faction: 'axis', manpower: 550, industry: 6, stability: 72,
+    capital: [16, 15], frontCells: [[13, 14]], startGarrison: { capital: 90, front: 0 } },
+  fra: { name: 'Fransiya', color: '#3f6fbf', faction: 'allies', manpower: 700, industry: 8, stability: 70,
+    capital: [6, 9], frontCells: [[12, 6], [12, 7], [12, 8], [12, 9], [12, 14]], startGarrison: { capital: 140, front: 90 } },
+  gbr: { name: 'Britaniya', color: '#c0485a', faction: 'allies', manpower: 650, industry: 9, stability: 74,
+    capital: [5, 1], frontCells: [], sendTo: 'fra', startGarrison: { capital: 110, front: 0 } },
+  pol: { name: 'Polsha', color: '#b08d3c', faction: 'allies', manpower: 500, industry: 5, stability: 62,
+    capital: [24, 6], frontCells: [[21, 5], [21, 6], [21, 7], [21, 8]], startGarrison: { capital: 70, front: 110 } },
+  ussr: { name: 'SSSR', color: '#9c2b2b', faction: 'comintern', manpower: 1000, industry: 10, stability: 68,
+    capital: [28, 6], frontCells: [], startGarrison: { capital: 170, front: 0 } },
+  ben: { name: 'Belgiya-Niderlandiya', color: '#caa6d9', faction: 'neutral', manpower: 150, industry: 2, stability: 80,
+    capital: [10, 3], frontCells: [], startGarrison: { capital: 18, front: 0 } },
+};
+const COUNTRY_IDS = Object.keys(COUNTRIES);
+const PACTS = [['ger', 'ussr']];         // Molotov-Ribbentrop: AI o'zi urush boshlamaydi
+const ALLIANCES = [['fra', 'gbr'], ['fra', 'pol'], ['gbr', 'pol']];
+const AXIS_PACT = [['ger', 'ita']];
+
+const UNITS = {
+  inf: { name: 'Piyoda diviziya', manpower: 40, prodCost: 60, buildMin: 4, attack: 8, defense: 11, speed: 2 },
+  armor: { name: 'Tank diviziyasi', manpower: 25, prodCost: 150, buildMin: 10, attack: 19, defense: 8, speed: 1 },
+};
+
+// Xaritani to'rtburchaklardan yig'amiz (so'l-o'ng tartibda, keyingisi avvalgisini bosib qo'yadi)
+const terrain = new Array(COLS * ROWS).fill(SEA);
+const owner = new Array(COLS * ROWS).fill(null);
+const idx = (x, y) => y * COLS + x;
+function stamp(code, x0, y0, x1, y1, mtn) {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) continue;
+    terrain[idx(x, y)] = mtn ? MTN : 'land';
+    owner[idx(x, y)] = mtn ? null : code;
+  }
+}
+stamp('ussr', 26, 0, 29, 17);
+stamp('pol', 21, 3, 27, 9);
+stamp('ger', 13, 3, 20, 11);
+stamp(null, 13, 12, 16, 13, true);                 // Alp tog'lari
+stamp('ita', 13, 14, 19, 16);
+stamp('ben', 9, 3, 12, 4);
+stamp('fra', 3, 5, 12, 14);
+stamp('gbr', 3, 0, 8, 3);
+
+function neighbors(x, y) {
+  const out = [];
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const nx = x + dx, ny = y + dy;
+    if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS) out.push([nx, ny]);
+  }
+  return out;
+}
+function isLand(x, y) { return terrain[idx(x, y)] === 'land'; }
+
+// ================================================================== O'yin holati
+const cell = [];           // har bir katak uchun: { garrison:{owner,power,inf,armor}|null, order:null|{...} }
+for (let i = 0; i < COLS * ROWS; i++) cell.push({ garrison: null, order: null });
+function cellOwner(x, y) { return owner[idx(x, y)]; }
+function setOwner(x, y, code) { owner[idx(x, y)] = code; }
+
+const nations = {};
+for (const id of COUNTRY_IDS) {
+  const d = COUNTRIES[id];
+  nations[id] = {
+    id, name: d.name, color: d.color, faction: d.faction, manpower: d.manpower, industry: d.industry,
+    stability: d.stability, alive: true, atWar: new Set(), allies: new Set(), pacts: new Set(),
+    queue: 'inf', progress: 0, log: [],
+  };
+}
+for (const [a, b] of ALLIANCES) { nations[a].allies.add(b); nations[b].allies.add(a); }
+for (const [a, b] of AXIS_PACT) { nations[a].allies.add(b); nations[b].allies.add(a); }
+for (const [a, b] of PACTS) { nations[a].pacts.add(b); nations[b].pacts.add(a); }
+
+function addGarrison(x, y, country, power) {
+  const c = cell[idx(x, y)];
+  if (!c.garrison || c.garrison.owner !== country) c.garrison = { owner: country, power: 0 };
+  c.garrison.power += power;
+}
+for (const id of COUNTRY_IDS) {
+  const d = COUNTRIES[id];
+  addGarrison(d.capital[0], d.capital[1], id, d.startGarrison.capital);
+  const fc = d.frontCells;
+  if (fc.length && d.startGarrison.front) {
+    const per = d.startGarrison.front / fc.length;
+    for (const [x, y] of fc) addGarrison(x, y, id, per);
+  }
+}
+
+let day = 0;
+const START_DATE = Date.UTC(1939, 8, 1);   // 1-sentabr 1939
+const MONTHS = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
+function dateStr() {
+  const d = new Date(START_DATE + day * 86400000);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}, ${d.getUTCFullYear()}`;
+}
+
+const events = [];
+function logEvent(html) { events.unshift({ day, html }); if (events.length > 60) events.pop(); renderLog(); }
+function atWar(a, b) { return nations[a].atWar.has(b); }
+function declareWar(a, b, reason) {
+  if (a === b || atWar(a, b) || !nations[a].alive || !nations[b].alive) return;
+  nations[a].atWar.add(b); nations[b].atWar.add(a);
+  logEvent(`<b style="color:${nations[a].color}">${nations[a].name}</b> <b style="color:${nations[b].color}">${nations[b].name}</b>ga urush e'lon qildi${reason ? ' (' + reason + ')' : ''}.`);
+}
+
+// --------------------------------------------------------------- Tarixiy ssenariy (1-raund ochilishi)
+let scripted = { polandInvaded: false, alliesJoined: false, italyJoined: false };
+function checkScript() {
+  if (!scripted.polandInvaded && day >= 0) { scripted.polandInvaded = true; declareWar('ger', 'pol', "Polsha bosqini"); }
+  if (!scripted.alliesJoined && day >= 2) {
+    scripted.alliesJoined = true;
+    for (const ally of nations.pol.allies) if (ally !== 'pol' && !atWar(ally, 'ger')) declareWar(ally, 'ger', "Polshaga berilgan kafolat");
+  }
+  if (!scripted.italyJoined && day >= 20 && atWar('ger', 'fra')) {
+    scripted.italyJoined = true;
+    for (const foe of nations.ger.atWar) declareWar('ita', foe, "O'qdosh ittifoq");
+  }
+}
+
+// --------------------------------------------------------------- Ishlab chiqarish
+function landCellsOf(code) { const out = []; for (let i = 0; i < owner.length; i++) if (owner[i] === code) out.push(i); return out; }
+function worldControlPct(code) {
+  let total = 0, mine = 0;
+  for (let i = 0; i < owner.length; i++) if (terrain[i] === 'land') { total++; if (owner[i] === code) mine++; }
+  return total ? Math.round(mine / total * 100) : 0;
+}
+function tickProduction(n, d) {
+  if (n.manpower < UNITS[n.queue].manpower) { return; } // askar yetishmayapti, kutyapmiz
+  n.progress += n.industry;
+  const need = UNITS[n.queue].prodCost;
+  const minDays = UNITS[n.queue].buildMin;
+  n._daysInQueue = (n._daysInQueue || 0) + 1;
+  if (n.progress >= need && n._daysInQueue >= minDays) {
+    n.progress -= need; n._daysInQueue = 0; n.manpower -= UNITS[n.queue].manpower;
+    deployNewDivision(n);
+  }
+}
+function deployNewDivision(n) {
+  const d = COUNTRIES[n.id];
+  const atWarNow = n.atWar.size > 0;
+  if (n.id === 'gbr' && atWarNow && d.sendTo) {
+    const target = COUNTRIES[d.sendTo].frontCells[0];
+    if (target) addGarrison(target[0], target[1], n.id, 30);
+    logEvent(`<b style="color:${n.color}">${n.name}</b> ekspeditsion kuchlarini jo'natdi.`);
+    return;
+  }
+  if (atWarNow && d.frontCells.length) {
+    const fc = pick(d.frontCells);
+    addGarrison(fc[0], fc[1], n.id, 30);
+  } else {
+    addGarrison(d.capital[0], d.capital[1], n.id, 30);
+  }
+}
+
+// --------------------------------------------------------------- Jang
+const TERRAIN_DEF = { land: 1.0 };
+function resolveCombats() {
+  for (let i = 0; i < cell.length; i++) {
+    const c = cell[i]; if (!c.order) continue;
+    const [tx, ty] = c.order.target; const tIdx = idx(tx, ty);
+    const src = c.garrison, dst = cell[tIdx];
+    if (!src || src.power <= 0) { c.order = null; continue; }
+    if (c.order.type === 'move') {
+      if (owner[tIdx] === src.owner) {
+        if (!dst.garrison || dst.garrison.owner !== src.owner) dst.garrison = { owner: src.owner, power: 0 };
+        dst.garrison.power += src.power;
+      }
+      c.garrison = null; c.order = null; continue;
+    }
+    if (!dst.garrison || dst.garrison.power <= 0) {
+      // bo'sh yoki qarshiliksiz hudud: darhol egallanadi
+      const capturedFrom = owner[tIdx];
+      owner[tIdx] = src.owner;
+      dst.garrison = { owner: src.owner, power: src.power * .9 };
+      src.power = 0; c.garrison = null; c.order = null;
+      afterCapture(src.owner, capturedFrom, tx, ty);
+      continue;
+    }
+    if (dst.garrison.owner === src.owner) { c.order = null; continue; } // allaqachon o'ziniki
+    const atkP = src.power * rand(.85, 1.15);
+    const defP = dst.garrison.power * (TERRAIN_DEF[terrain[tIdx]] || 1) * rand(.85, 1.15);
+    dst.garrison.power = Math.max(0, dst.garrison.power - atkP * .22);
+    src.power = Math.max(0, src.power - defP * .22);
+    if (dst.garrison.power <= 0) {
+      const capturedFrom = owner[tIdx];
+      owner[tIdx] = src.owner;
+      dst.garrison = { owner: src.owner, power: src.power };
+      src.power = 0; c.garrison = null; c.order = null;
+      afterCapture(src.owner, capturedFrom, tx, ty);
+    } else if (src.power <= 0) {
+      c.garrison = null; c.order = null;
+    }
+  }
+}
+function afterCapture(attacker, defender, x, y) {
+  const an = nations[attacker], dn = defender && nations[defender];
+  an.stability = clamp(an.stability + 1, 0, 100);
+  if (dn) {
+    dn.stability = clamp(dn.stability - 5, 0, 100);
+    if (landCellsOf(defender).length === 0 && dn.alive) {
+      dn.alive = false;
+      logEvent(`<b style="color:${dn.color}">${dn.name}</b> davlati taslim bo'ldi!`);
+    }
+  }
+  logEvent(`<b style="color:${an.color}">${an.name}</b> ${x},${y} hududini egalladi.`);
+}
+
+// --------------------------------------------------------------- Sun'iy intellekt
+function aiThink() {
+  for (const id of COUNTRY_IDS) {
+    const n = nations[id]; if (!n.alive || id === player.id) continue;
+    tickProduction(n, COUNTRIES[id]);
+    if (n.atWar.size === 0) continue;
+    for (let i = 0; i < cell.length; i++) {
+      const c = cell[i]; if (owner[i] !== id || !c.garrison || c.order) continue;
+      const x = i % COLS, y = (i - x) / COLS;
+      let best = null, bestScore = -1e9;
+      for (const [nx, ny] of neighbors(x, y)) {
+        if (!isLand(nx, ny)) continue;
+        const no = owner[idx(nx, ny)];
+        if (!no || no === id || !n.atWar.has(no)) continue;
+        const def = cell[idx(nx, ny)].garrison;
+        const score = c.garrison.power - (def ? def.power : 0);
+        if (score > bestScore) { bestScore = score; best = [nx, ny]; }
+      }
+      if (best && bestScore > -20) c.order = { type: 'attack', target: best };
+    }
+  }
+}
+
+// --------------------------------------------------------------- Beqarorlik / qo'zg'olon
+function tickStability() {
+  for (const id of COUNTRY_IDS) {
+    const n = nations[id]; if (!n.alive) continue;
+    n.stability = clamp(n.stability + (n.atWar.size > 0 ? -.3 : .08), 0, 100);
+    n.manpower += 2;
+    if (n.stability < 30 && Math.random() < (30 - n.stability) / 100 * .25) {
+      const cells = landCellsOf(id).filter(i => (cell[i].garrison ? cell[i].garrison.power < 15 : true));
+      if (cells.length) {
+        const i = pick(cells), x = i % COLS, y = (i - x) / COLS;
+        owner[i] = NEUTRAL; cell[i].garrison = null; cell[i].order = null;
+        logEvent(`<b style="color:${n.color}">${n.name}</b>da g'alayon: ${x},${y} nazoratdan chiqdi.`);
+      }
+    }
+  }
+}
+
+// ================================================================== Simulyatsiya
+let state = 'menu';     // menu | playing
+let speed = 0;          // 0=pauza, 1,2,3 = tezliklar
+const SPEED_DAYS = { 1: 1.2, 2: 3.2, 3: 7 };
+let acc = 0;
+function simDay() {
+  checkScript();
+  for (const id of COUNTRY_IDS) tickProduction(nations[id], COUNTRIES[id]);
+  resolveCombats();
+  aiThink();
+  tickStability();
+  day++;
+}
+function step(dtSec) {
+  if (state !== 'playing' || speed === 0) return;
+  acc += dtSec * SPEED_DAYS[speed];
+  let guard = 0;
+  while (acc >= 1 && guard++ < 40) { simDay(); acc -= 1; }
+}
+
+// ================================================================== O'yinchi
+const player = { id: 'ger', selected: null, order2: null };
+function isSpectator() { return !player.id || !nations[player.id]; }
+
+// ================================================================== Chizish
+const canvas = $('map'), ctx = canvas.getContext('2d');
+let cellPx = 30, offX = 20, offY = 70;
+function resize() {
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  cellPx = Math.max(14, Math.min(34, Math.floor((innerWidth - 420) / COLS), Math.floor((innerHeight - 120) / ROWS)));
+  offX = 16; offY = 64;
+}
+addEventListener('resize', resize);
+
+function colorOf(code) {
+  if (code === SEA || code === null) return '#15222f';
+  if (code === NEUTRAL) return '#555b52';
+  return nations[code] ? nations[code].color : '#333';
+}
+function draw() {
+  ctx.fillStyle = '#0c1016'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+    const i = idx(x, y), t = terrain[i];
+    const px = offX + x * cellPx, py = offY + y * cellPx;
+    ctx.fillStyle = t === MTN ? '#5a5a58' : t === SEA ? '#15222f' : colorOf(owner[i]);
+    ctx.fillRect(px, py, cellPx - 1, cellPx - 1);
+    if (owner[i] && owner[i] !== NEUTRAL && nations[owner[i]] && !nations[owner[i]].alive) {
+      ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(px, py, cellPx - 1, cellPx - 1);
+    }
+    const g = cell[i].garrison;
+    if (g && g.power > 0) {
+      ctx.fillStyle = 'rgba(255,255,255,.92)';
+      ctx.beginPath(); ctx.arc(px + cellPx / 2, py + cellPx / 2, Math.min(cellPx * .32, 3 + g.power / 40), 0, 7); ctx.fill();
+      if (cellPx > 16) { ctx.fillStyle = '#111'; ctx.font = '700 9px system-ui'; ctx.textAlign = 'center';
+        ctx.fillText(Math.round(g.power), px + cellPx / 2, py + cellPx / 2 + 3); }
+    }
+    if (cell[i].order) {
+      const [tx, ty] = cell[i].order.target;
+      ctx.strokeStyle = '#ff5a48'; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(px + cellPx / 2, py + cellPx / 2);
+      ctx.lineTo(offX + tx * cellPx + cellPx / 2, offY + ty * cellPx + cellPx / 2); ctx.stroke();
+    }
+  }
+  // Kapitallar
+  for (const id of COUNTRY_IDS) {
+    const [cx, cy] = COUNTRIES[id].capital;
+    const px = offX + cx * cellPx + cellPx / 2, py = offY + cy * cellPx + cellPx / 2;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, cellPx * .22, 0, 7); ctx.stroke();
+  }
+  // Tanlangan katak
+  if (player.selected) {
+    const [sx, sy] = player.selected;
+    ctx.strokeStyle = '#ffc83c'; ctx.lineWidth = 3;
+    ctx.strokeRect(offX + sx * cellPx + 1, offY + sy * cellPx + 1, cellPx - 3, cellPx - 3);
+  }
+}
+
+canvas.addEventListener('click', e => {
+  if (state !== 'playing') return;
+  const x = Math.floor((e.clientX - offX) / cellPx), y = Math.floor((e.clientY - offY) / cellPx);
+  if (x < 0 || y < 0 || x >= COLS || y >= ROWS || !isLand(x, y)) { player.selected = null; renderSelInfo(); return; }
+  const g = cell[idx(x, y)].garrison;
+  if (player.selected) {
+    const [sx, sy] = player.selected;
+    if ((sx !== x || sy !== y) && Math.abs(sx - x) + Math.abs(sy - y) === 1) {
+      const sg = cell[idx(sx, sy)].garrison;
+      if (sg && sg.owner === player.id) {
+        const targetOwner = owner[idx(x, y)];
+        cell[idx(sx, sy)].order = targetOwner === player.id ? { type: 'move', target: [x, y] } : { type: 'attack', target: [x, y] };
+        player.selected = [x, y]; renderSelInfo(); return;
+      }
+    }
+  }
+  player.selected = [x, y]; renderSelInfo();
+});
+
+// ================================================================== HUD
+const hc = {};
+function txt(id, v) { if (hc[id] !== v) { hc[id] = v; $(id).textContent = v; } }
+function html(id, v) { if (hc[id] !== v) { hc[id] = v; $(id).innerHTML = v; } }
+
+function renderTop() {
+  txt('dateLbl', dateStr());
+  if (isSpectator()) { html('topRes', `<span>Kuzatish rejimi &mdash; hech kimni boshqarmayapsiz</span>`); return; }
+  const n = nations[player.id], d = COUNTRIES[player.id];
+  html('topRes', `<span><span class="flag" style="background:${d.color}"></span>${d.name}</span>
+    <span>Askar: <b>${Math.round(n.manpower)}</b></span>
+    <span>Sanoat: <b>${n.industry}</b>/kun</span>
+    <span>Barqarorlik: <b>${Math.round(n.stability)}%</b></span>
+    <span>Nazorat: <b>${worldControlPct(player.id)}%</b></span>`);
+}
+function renderSelInfo() {
+  const el = $('selInfo');
+  if (!player.selected) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const [x, y] = player.selected, i = idx(x, y), own = owner[i], g = cell[i].garrison;
+  const n = own && own !== NEUTRAL ? nations[own] : null;
+  let h = `<h3>${n ? `<span class="flag" style="background:${n.color}"></span>${n.name}` : own === NEUTRAL ? "Qo'zg'olonchilar" : 'Hudud'}</h3>`;
+  h += `<div class="muted">Katak: ${x}, ${y}</div>`;
+  if (g) h += `<div class="row"><span>Qo'shin kuchi</span><b>${Math.round(g.power)}</b></div>`;
+  else h += `<div class="muted">Qo'shin yo'q</div>`;
+  if (own === player.id && g && g.owner === player.id) {
+    h += `<p class="note">Qo'shni katakni bosing: o'zingizniki bo'lsa — ko'chirish, raqibniki bo'lsa — hujum.</p>`;
+  }
+  el.innerHTML = h;
+}
+
+let curTab = 'hud';
+function renderTabs() {
+  for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.tab === curTab);
+  if (curTab === 'hud') renderHudTab(); else renderNationsTab();
+}
+function renderHudTab() {
+  if (isSpectator()) {
+    html('tabBody', `<h3>Kuzatish rejimi</h3><p class="note">Siz hech qanday davlatni boshqarmayapsiz, faqat voqealarni kuzatyapsiz.
+      Biror davlatni boshqarish uchun pauza qilib, "Davlat tanlash" tugmasini bosing.</p>
+      <button class="actbtn ok" id="pickNation">Davlat tanlash</button>`);
+    return;
+  }
+  const n = nations[player.id], d = COUNTRIES[player.id];
+  const u = UNITS[n.queue];
+  let h = `<h3>Ishlab chiqarish</h3>
+    <div class="row"><span>Navbatda</span><b>${u.name}</b></div>
+    <div class="bar"><i style="width:${clamp(n.progress / u.prodCost * 100, 0, 100)}%;background:#3b82f6"></i></div>
+    <div class="row muted"><span>${Math.round(n.progress)} / ${u.prodCost} ishlab chiqarish ochkosi</span></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button data-queue="inf" class="${n.queue === 'inf' ? 'main' : ''}" style="flex:1">Piyoda</button>
+      <button data-queue="armor" class="${n.queue === 'armor' ? 'main' : ''}" style="flex:1">Tank</button>
+    </div>
+    <h3 style="margin-top:16px">Davlat holati</h3>
+    <div class="row"><span>Aholi (askar zaxirasi)</span><b>${Math.round(n.manpower)}</b></div>
+    <div class="row"><span>Sanoat</span><b>${n.industry}/kun</b></div>
+    <div class="row"><span>Barqarorlik</span><b>${Math.round(n.stability)}%</b></div>
+    <div class="bar"><i style="width:${n.stability}%;background:${n.stability < 30 ? '#c0485a' : '#2f6f3f'}"></i></div>
+    <div class="row"><span>Nazorat qilingan hudud</span><b>${worldControlPct(player.id)}%</b></div>`;
+  if (d.frontCells.length) {
+    h += `<button class="actbtn ok" id="toFront">Frontga askar yubor</button>`;
+  }
+  html('tabBody', h);
+}
+const FACTION_NAME = { axis: "O'qdoshlar", allies: 'Ittifoqchilar', comintern: 'Kommunistik', neutral: 'Neytral' };
+function renderNationsTab() {
+  const me = isSpectator() ? null : nations[player.id];
+  let h = '<h3>Davlatlar</h3>';
+  for (const id of COUNTRY_IDS) {
+    const n = nations[id];
+    let tag = 'peace', tagText = 'Tinch';
+    if (!n.alive) { tag = 'dead'; tagText = 'Taslim bo\'lgan'; }
+    else if (me && id === player.id) { tag = 'peace'; tagText = "O'zingiz"; }
+    else if (me && me.atWar.has(id)) { tag = 'war'; tagText = 'Urushda'; }
+    else if (me && me.allies.has(id)) { tag = 'ally'; tagText = me.pacts.has(id) ? 'Pakt' : 'Ittifoq'; }
+    else if (!me) { tag = n.atWar.size ? 'war' : 'peace'; tagText = n.atWar.size ? `${n.atWar.size} jang` : FACTION_NAME[n.faction]; }
+    h += `<div class="nation-row">
+      <span class="flag" style="background:${n.color}"></span>
+      <span class="name">${n.name} <span class="muted">(${worldControlPct(id)}%)</span></span>
+      <span class="tag ${tag}">${tagText}</span>`;
+    if (me && n.alive && id !== player.id && !me.atWar.has(id) && !me.allies.has(id)) {
+      h += `<button data-war="${id}">Urush e'lon qilish</button>`;
+    }
+    h += `</div>`;
+  }
+  html('tabBody', h);
+}
+function renderLog() {
+  $('log').innerHTML = events.slice(0, 20).map(e => `<div><span class="muted">[${e.day}-kun]</span> ${e.html}</div>`).join('');
+}
+
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; curTab = b.dataset.tab; renderTabs(); });
+$('tabBody').addEventListener('click', e => {
+  const q = e.target.closest('[data-queue]');
+  if (q) { nations[player.id].queue = q.dataset.queue; nations[player.id].progress = 0; nations[player.id]._daysInQueue = 0; renderTabs(); return; }
+  const w = e.target.closest('[data-war]');
+  if (w) { declareWar(player.id, w.dataset.war, "o'yinchi qarori"); renderTabs(); return; }
+  if (e.target.id === 'toFront') {
+    const d = COUNTRIES[player.id], cap = cell[idx(d.capital[0], d.capital[1])].garrison;
+    if (cap && cap.power > 10 && d.frontCells.length) {
+      const fc = d.frontCells[0];
+      addGarrison(fc[0], fc[1], player.id, cap.power * .8);
+      cap.power *= .2;
+      logEvent(`<b style="color:${d.color}">${nations[player.id].name}</b> poytaxtdan frontga qo'shin yubordi.`);
+      renderTabs();
+    }
+  }
+  if (e.target.id === 'pickNation') { setSpeed(0); showMenu(); }
+});
+
+// ================================================================== Menyular
+function showMenu() {
+  state = 'menu';
+  let h = `<h1>JAHON URUSHI</h1>
+    <p>Global strategik o'yin (beta): davlatlarni boshqaring, armiya quring, diplomatiya olib boring.
+    1939-yil 1-sentabrdan boshlanadi. Qaysi davlatni tanlaysiz?</p>
+    <div id="pick">` + COUNTRY_IDS.map(id => `<button data-pick="${id}" class="${id === player.id ? 'sel' : ''}">
+      <i style="background:${COUNTRIES[id].color}"></i>${COUNTRIES[id].name}</button>`).join('') +
+      `<button data-pick="__spectator__" class="${isSpectator() ? 'sel' : ''}"><i style="background:#444"></i>Tomoshabin</button></div>
+    <div class="btns"><button class="main" id="startBtn">BOSHLASH</button></div>
+    <p class="note">Bu hali beta versiya: faqat quruqlikdagi armiya, diplomatiya va ishlab chiqarish ishlaydi.
+    Dengiz flot, aviatsiya, josuslik va hukmdor xususiyatlari keyingi versiyalarda qo'shiladi.</p>`;
+  $('obox').innerHTML = h;
+  $('overlay').style.display = 'flex';
+}
+$('overlay').addEventListener('click', e => {
+  const p = e.target.closest('[data-pick]'); if (p) { player.id = p.dataset.pick === '__spectator__' ? null : p.dataset.pick; showMenu(); return; }
+  if (e.target.id === 'startBtn') { state = 'playing'; $('overlay').style.display = 'none'; renderAll(); }
+});
+function setSpeed(s) {
+  speed = s; acc = 0;
+  for (const [id, v] of [['spPause', 0], ['sp1', 1], ['sp2', 2], ['sp3', 3]]) $(id).classList.toggle('on', v === s);
+}
+$('spPause').onclick = () => setSpeed(0); $('sp1').onclick = () => setSpeed(1); $('sp2').onclick = () => setSpeed(2); $('sp3').onclick = () => setSpeed(3);
+
+function renderAll() { renderTop(); renderTabs(); renderSelInfo(); renderLog(); }
+
+// ================================================================== Asosiy sikl
+let last = performance.now();
+function frame(t) {
+  const dt = Math.min(.25, (t - last) / 1000); last = t;
+  step(dt);
+  draw();
+  if (state === 'playing') { renderTop(); renderTabs(); }
+  requestAnimationFrame(frame);
+}
+resize();
+showMenu();
+requestAnimationFrame(frame);
+
+if (DEBUG) window.__g = {
+  nations, cell, owner, terrain, COUNTRIES, COUNTRY_IDS, UNITS, idx, neighbors, isLand, COLS, ROWS,
+  simDay, declareWar, worldControlPct, player, setSpeed, get day() { return day; }, get state() { return state; }, set state(v) { state = v; },
+  landCellsOf, nationsAlive: () => COUNTRY_IDS.filter(id => nations[id].alive),
+};
+})();
+</script>
+</body>
+</html>
